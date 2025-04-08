@@ -1,0 +1,5 @@
+3. add backward passes for each operation ( add, subtract, multiply, divide, matmul, transpose)
+4. write tests for backward pass
+5. add activation functions and backward passes
+6. write tests for activation functions
+7. write gpu support
