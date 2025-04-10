@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from pyml.tensor import tensor
+from pyml.device import Device
 import torch
 
 class TestAutogradAgainstPyTorch(unittest.TestCase):
@@ -294,3 +295,114 @@ class TestAutogradAgainstPyTorch(unittest.TestCase):
             ([1.0, 2.0, 3.0], False),
             ([4.0, 5.0, 6.0], True)
         )
+
+
+    def test_no_grad_context(self):
+        """Test that no_grad context prevents gradient computation"""
+        with tensor.no_grad():
+            a = tensor([1.0, 2.0, 3.0])
+            b = tensor([4.0, 5.0, 6.0])
+            c = a * b
+            
+            # Verify no gradients are tracked
+            self.assertFalse(a.requires_grad)
+            self.assertFalse(b.requires_grad)
+            self.assertFalse(c.requires_grad)
+            
+            # Verify no grad attributes exist
+            self.assertIsNone(a.grad)
+            self.assertIsNone(b.grad)
+            self.assertIsNone(c.grad)
+            self.assertIsNone(c._ctx)
+            
+            # Try backward (should do nothing)
+            c.backward()
+            self.assertIsNone(a.grad)
+            self.assertIsNone(b.grad)
+    
+    def test_no_grad_nested(self):
+        """Test nested no_grad contexts"""
+        with tensor.no_grad():
+            a = tensor([1.0, 2.0, 3.0])
+            with tensor.no_grad():
+                b = tensor([4.0, 5.0, 6.0])
+                c = a * b
+                self.assertFalse(c.requires_grad)
+            
+            d = a + 1
+            self.assertFalse(d.requires_grad)
+    
+    def test_no_grad_explicit_override(self):
+        """Test that requires_grad=True overrides no_grad"""
+        with tensor.no_grad():
+            a = tensor([1.0, 2.0, 3.0], requires_grad=True)
+            b = tensor([4.0, 5.0, 6.0])
+            c = a * b
+            
+            self.assertTrue(a.requires_grad)
+            self.assertFalse(b.requires_grad)
+            self.assertTrue(c.requires_grad)
+    
+    def test_no_grad_memory(self):
+        """Test that no_grad reduces memory usage"""
+        def get_mem_usage():
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                return torch.cuda.memory_allocated()
+            return 0
+        
+        start_mem = get_mem_usage()
+        print("####", start_mem)
+        a = tensor([1.0, 2.0, 3.0], requires_grad=True)
+        b = tensor([4.0, 5.0, 6.0], requires_grad=True)
+        c = a * b
+        c.backward(tensor([1.0, 1.0, 1.0]))
+        with_grad_mem = get_mem_usage() - start_mem
+        
+        start_mem = get_mem_usage()
+        with tensor.no_grad():
+            a = tensor([1.0, 2.0, 3.0])
+            b = tensor([4.0, 5.0, 6.0])
+            c = a * b
+        no_grad_mem = get_mem_usage() - start_mem
+
+        if torch.cuda.is_available():
+            self.assertLess(no_grad_mem, with_grad_mem)
+        else:
+            self.assertLessEqual(no_grad_mem, with_grad_mem)
+    
+    def test_no_grad_performance(self):
+        """Test that no_grad improves performance"""
+        import time
+        
+        # With gradients
+        start_time = time.time()
+        for _ in range(100):
+            a = tensor(np.random.rand(100, 100), requires_grad=True)
+            b = tensor(np.random.rand(100, 100), requires_grad=True)
+            c = a @ b
+            c.backward(tensor(np.ones((100, 100))))
+        grad_time = time.time() - start_time
+        
+        # Without gradients
+        start_time = time.time()
+        with tensor.no_grad():
+            for _ in range(100):
+                a = tensor(np.random.rand(100, 100))
+                b = tensor(np.random.rand(100, 100))
+                c = a @ b
+        no_grad_time = time.time() - start_time
+        
+        self.assertLess(no_grad_time, grad_time)
+    
+    def test_no_grad_classmethod(self):
+        """Test that no_grad works as both context manager and decorator"""
+        
+        @tensor.no_grad()
+        def no_grad_func():
+            a = tensor([1.0, 2.0, 3.0])
+            b = tensor([4.0, 5.0, 6.0])
+            return a * b
+        
+        result = no_grad_func()
+        self.assertFalse(result.requires_grad)

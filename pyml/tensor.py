@@ -1,7 +1,10 @@
 import numpy as np
 from .device import DeviceManager
+from contextlib import contextmanager
 
 class tensor:
+    _grad_enabled = True
+
     def __init__(self, data=None, dtype=None, device="cpu", requires_grad=False):
         """
         Create a new tensor.
@@ -13,7 +16,12 @@ class tensor:
             requires_grad: If True, tracks computation history for gradients
         """
         self.device = DeviceManager.get_device(device)
-        self.requires_grad = requires_grad
+        
+        if requires_grad is None:
+            self.requires_grad = self._grad_enabled
+        else:
+            self.requires_grad = requires_grad
+
         self.grad = None
         self._grad_fn = None
         self._ctx = None
@@ -28,6 +36,17 @@ class tensor:
             self._data = np.array(data, dtype=dtype)
         else:
             raise ValueError(f"Invalid data type: {type(data)}")
+        
+    @classmethod
+    @contextmanager
+    def no_grad(cls):
+        """Context manager that disables gradient calculation"""
+        old_value = cls._grad_enabled
+        cls._grad_enabled = False
+        try:
+            yield
+        finally:
+            cls._grad_enabled = old_value
         
     def backward(self, grad=None):
         """
