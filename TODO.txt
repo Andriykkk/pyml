@@ -1,5 +1,4 @@
-3. add backward passes for each operation ( add, subtract, multiply, divide, matmul, transpose)
-4. write tests for backward pass
-5. add activation functions and backward passes
-6. write tests for activation functions
-7. write gpu support
+[ ] - add activation functions and backward passes
+[ ] - check advanced indexint in backward pass for gradient accumulation
+[ ] - write tests for activation functions
+[ ] - write gpu support
