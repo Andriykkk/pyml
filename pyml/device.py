@@ -41,3 +41,7 @@ class DeviceManager:
     def reset(cls):
         """Reset all devices."""
         cls._devices.clear()
+
+    @classmethod
+    def is_available(cls, device_type):
+        return Device.is_available(device_type)

@@ -1,5 +1,5 @@
 import numpy as np
-from .device import Device, DeviceManager
+from .device import DeviceManager
 
 class tensor:
     def __init__(self, data=None, dtype=None, device="cpu", requires_grad=False):

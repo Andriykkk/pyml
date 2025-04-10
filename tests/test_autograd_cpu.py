@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
 from pyml.tensor import tensor
-from pyml.device import Device
 import torch
 
 class TestAutogradAgainstPyTorch(unittest.TestCase):
