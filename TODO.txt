@@ -1,4 +1,8 @@
+[x] - add utils functions to transform pyml tensor to pytorch tensor and vice versa
+[ ] - add linear layer and add utils for transforming
 [ ] - add activation functions and backward passes
+[ ] - add nn module and function like .to(device), forward, accumulation of gradients and parameters
 [ ] - check advanced indexint in backward pass for gradient accumulation
 [ ] - write tests for activation functions
 [ ] - write gpu support
+[ ] - add tests for operations with different devices

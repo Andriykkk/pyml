@@ -71,6 +71,10 @@ class tensor:
     def __add__(self, other):
         """Element-wise addition with automatic broadcasting"""
         other = other if isinstance(other, tensor) else tensor(other, device=self.device.type)
+
+        if self.device.type != other.device.type:
+            raise RuntimeError("Tensors must be on the same device")
+
         result_data = self._data + other._data
         
         result = tensor(result_data, dtype=self.dtype, device=self.device.type,
@@ -85,6 +89,10 @@ class tensor:
     def __sub__(self, other):
         """Element-wise subtraction with automatic broadcasting"""
         other = other if isinstance(other, tensor) else tensor(other, device=self.device.type)
+        
+        if self.device.type != other.device.type:
+            raise RuntimeError("Tensors must be on the same device")
+        
         result_data = self._data - other._data
         
         result = tensor(result_data, dtype=self.dtype, device=self.device.type,
@@ -99,6 +107,10 @@ class tensor:
     def __mul__(self, other):
         """Element-wise multiplication with automatic broadcasting"""
         other = other if isinstance(other, tensor) else tensor(other, device=self.device.type)
+        
+        if self.device.type != other.device.type:
+            raise RuntimeError("Tensors must be on the same device")
+        
         result_data = self._data * other._data
         
         result = tensor(result_data, dtype=self.dtype, device=self.device.type,
@@ -113,6 +125,10 @@ class tensor:
     def __truediv__(self, other):
         """Element-wise division with automatic broadcasting"""
         other = other if isinstance(other, tensor) else tensor(other, device=self.device.type)
+
+        if self.device.type != other.device.type:
+            raise RuntimeError("Tensors must be on the same device")
+        
         result_data = self._data / other._data
         
         result = tensor(result_data, dtype=self.dtype, device=self.device.type,
@@ -142,6 +158,9 @@ class tensor:
 
     def __matmul__(self, other):
         """Support for @ operator"""
+        if self.device.type != other.device.type:
+            raise RuntimeError("Tensors must be on the same device")
+        
         return self.matmul(other)
     
     def transpose(self, *axes):
