@@ -1,4 +1,4 @@
-[x] - add activation functions and backward passes
+[x] - create dataloader
 [ ] - add loss function Crossentropy
 [ ] - add nn module and function like .to(device), forward, accumulation of gradients and parameters
 [ ] - check advanced indexint in backward pass for gradient accumulation
@@ -6,3 +6,4 @@
 [ ] - write gpu support
 [ ] - add tests for operations with different devices
 [ ] - add with structure like "with pyml.float16"
+[ ] - dataloader can take a list of files and then load and unload them and perform some function before and after it, this is all to save memory

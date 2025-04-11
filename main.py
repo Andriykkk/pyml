@@ -1,85 +1,40 @@
 import numpy as np
 from pyml import tensor
-from pyml.nn import Linear
+import pyml.nn
+from pyml.utils.data import DataLoader
+import torchvision
+import torchvision.transforms as transforms
 
-batch_size = 4
-in_features = 10
-out_features = 5
-pyml_linear = Linear(in_features, out_features)
-grad_output_np = np.ones(out_features, dtype=np.float32)
-grad_output_tensor = tensor(grad_output_np)
-np_input = np.random.randn(in_features).astype(np.float32)
-pyml_input = tensor(np_input, requires_grad=True)
+class SimpleNN():
+    def __init__(self):
+        self.fc1 = pyml.nn.Linear(28 * 28, 128)
+        self.fc2 = pyml.nn.Linear(128, 64)
+        self.fc3 = pyml.nn.Linear(64, 10)
+        self.relu = pyml.nn.Relu()
+        self.softmax = pyml.nn.Softmax()
 
-# Forward pass
-pyml_output = pyml_linear(pyml_input)
-# pyml_output = pyml_input @ pyml_linear.weight.transpose() + pyml_linear.bias_param
-# print("####Tensor" if isinstance(pyml_linear.bias_param, tensor) else "###Numpy")
-pyml_output.backward(grad_output_tensor)
-print("PyML weight:", pyml_linear.weight)
-print("PyML weight grad:", pyml_linear.weight.grad)
-print("PyML bias grad:", pyml_linear.bias_param.grad if pyml_linear.bias else None)
+    def forward(self, x):
+        x = x.view(-1, 28 * 28)
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+    
+transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 
-# in_features = 10
-# out_features = 5
-# weight_data = np.random.randn(out_features, in_features).astype(np.float32)
-# weight = tensor(weight_data, requires_grad=True)
+trainset = torchvision.datasets.FashionMNIST(root='./data', train=True, download=True, transform=transform)
+testset = torchvision.datasets.FashionMNIST(root='./data', train=False, download=True, transform=transform)
 
-# bias_data = np.random.randn(out_features).astype(np.float32)
-# bias = tensor(bias_data, requires_grad=True)
+trainloader = DataLoader(trainset, batch_size=64, shuffle=True)
+testloader = DataLoader(testset, batch_size=64, shuffle=False)
 
-# np_input = np.random.randn(in_features).astype(np.float32)
-# input_tensor = tensor(np_input, requires_grad=True)
+for inputs, labels in testloader:
+    print(inputs.shape)
+    print(labels.shape)
 
-# output = input_tensor @ weight.transpose() + bias
+model = SimpleNN()
 
-# grad_output_np = np.ones(out_features, dtype=np.float32)
-# grad_output_tensor = tensor(grad_output_np)
 
-# output.backward(grad_output_tensor)
-
-# print("Gradient of weight:")
-# print(weight.grad)
-# print("Gradient of bias:")
-# print(bias.grad)
-# print("Gradient of input:")
-# print(input_tensor.grad)
-
-#  import torch
-# import torch.nn as nn
-# import torch.optim as optim
-# import torchvision
-# import torchvision.transforms as transforms
-# from torch.utils.data import DataLoader
-
-# # Define the neural network model
-# class SimpleNN(nn.Module):
-#     def __init__(self):
-#         super(SimpleNN, self).__init__()
-#         self.fc1 = nn.Linear(28 * 28, 128)  # First hidden layer
-#         self.fc2 = nn.Linear(128, 64)       # Second hidden layer
-#         self.fc3 = nn.Linear(64, 10)        # Output layer (10 classes)
-#         self.relu = nn.ReLU()
-#         self.softmax = nn.Softmax(dim=1)
-
-#     def forward(self, x):
-#         x = x.view(-1, 28 * 28)  # Flatten the input image
-#         x = self.relu(self.fc1(x))  # Apply first layer and ReLU activation
-#         x = self.relu(self.fc2(x))  # Apply second layer and ReLU activation
-#         x = self.fc3(x)            # Output layer
-#         return x
-
-# # Load the Fashion MNIST dataset
-# transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
-
-# trainset = torchvision.datasets.FashionMNIST(root='./data', train=True, download=True, transform=transform)
-# testset = torchvision.datasets.FashionMNIST(root='./data', train=False, download=True, transform=transform)
-
-# trainloader = DataLoader(trainset, batch_size=64, shuffle=True)
-# testloader = DataLoader(testset, batch_size=64, shuffle=False)
-
-# # Initialize the model, loss function, and optimizer
-# model = SimpleNN()
 # criterion = nn.CrossEntropyLoss()  # Suitable for multi-class classification
 # optimizer = optim.Adam(model.parameters(), lr=0.001)
 

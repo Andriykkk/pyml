@@ -32,7 +32,10 @@ class DeviceManager:
 
     @classmethod
     def get_device(cls, device_type):
-        device_type = device_type.lower()
+        if isinstance(device_type, str):
+            device_type = device_type.lower()
+        elif isinstance(device_type, Device):
+            return device_type
         if device_type not in cls._devices:
             cls._devices[device_type] = Device(device_type)
         return cls._devices[device_type]
