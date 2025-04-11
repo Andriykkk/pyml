@@ -62,8 +62,9 @@ class tensor:
         
         if grad is None:
             if self.shape != ():
-                raise RuntimeError("grad must be specified for non-scalar tensors")
-            grad = tensor(1.0, device=self.device.type)
+                grad = tensor(1.0, device=self.device.type)
+            else:
+                grad = tensor(np.ones(self.shape), device=self.device.type)
         elif isinstance(grad, (int, float)):
             grad = tensor(grad, device=self.device.type)
         
@@ -152,6 +153,19 @@ class tensor:
             result._ctx = (self, other)
             result._grad_fn = _div_backward
         
+        return result
+    
+    def reshape(self, *shape):
+        """Reshape the tensor with autograd support"""
+        new_shape = shape if len(shape) > 1 else shape[0]
+        old_shape = self.shape
+        reshaped_data = self._data.reshape(new_shape)
+        result = tensor(reshaped_data, dtype=self.dtype, device=self.device.type, requires_grad=self.requires_grad)
+
+        if result.requires_grad:
+            result._ctx = (self, old_shape)
+            result._grad_fn = _reshape_backward
+
         return result
         
     def matmul(self, other):
@@ -523,3 +537,9 @@ def _sum_to_shape(grad, shape):
     if sum_axes:
         return np.sum(grad, axis=sum_axes, keepdims=True)
     return grad
+
+def _reshape_backward(ctx, grad):
+    input_tensor, original_shape = ctx
+    if input_tensor.requires_grad:
+        grad_input = grad.reshape(original_shape)
+        input_tensor.backward(tensor(grad_input, device=input_tensor.device.type))

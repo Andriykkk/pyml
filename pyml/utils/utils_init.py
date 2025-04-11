@@ -1,6 +1,6 @@
 import numpy as np
 
-def kaiming_uniform(fan_in, fan_out, a=0, mode='fan_in', nonlinearity='leaky_relu'):
+def kaiming_uniform(fan_in, fan_out, a=0, mode='fan_in', nonlinearity='relu'):
     """
     Kaiming uniform initialization (He initialization)
     
@@ -13,9 +13,9 @@ def kaiming_uniform(fan_in, fan_out, a=0, mode='fan_in', nonlinearity='leaky_rel
     """
     gain = np.sqrt(2.0) if nonlinearity == 'relu' else np.sqrt(2.0 / (1 + a ** 2))
     if mode == 'fan_in':
-        bound = gain * np.sqrt(3.0 / fan_in)
+        bound = gain * np.sqrt(6.0 / fan_in)
     elif mode == 'fan_out':
-        bound = gain * np.sqrt(3.0 / fan_out)
+        bound = gain * np.sqrt(6.0 / fan_out)
     else:
         raise ValueError(f"Invalid mode: {mode}")
     

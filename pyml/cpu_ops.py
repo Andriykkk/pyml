@@ -71,3 +71,4 @@ class CPUOps:
         result_data = np.mean(val._data, axis=axis, keepdims=keepdims)
         return tensor(result_data, dtype=val.dtype, device=val.device.type,
                     requires_grad=val.requires_grad)
+    

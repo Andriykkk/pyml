@@ -1,10 +1,49 @@
 import numpy as np
 from pyml import tensor
+from pyml.nn import Linear
 
-a = tensor.zeros((2, 3))
-b = tensor.ones((2, 3))
-c = a + b
-print(c)
+batch_size = 4
+in_features = 10
+out_features = 5
+pyml_linear = Linear(in_features, out_features)
+grad_output_np = np.ones(out_features, dtype=np.float32)
+grad_output_tensor = tensor(grad_output_np)
+np_input = np.random.randn(in_features).astype(np.float32)
+pyml_input = tensor(np_input, requires_grad=True)
+
+# Forward pass
+pyml_output = pyml_linear(pyml_input)
+# pyml_output = pyml_input @ pyml_linear.weight.transpose() + pyml_linear.bias_param
+# print("####Tensor" if isinstance(pyml_linear.bias_param, tensor) else "###Numpy")
+pyml_output.backward(grad_output_tensor)
+print("PyML weight:", pyml_linear.weight)
+print("PyML weight grad:", pyml_linear.weight.grad)
+print("PyML bias grad:", pyml_linear.bias_param.grad if pyml_linear.bias else None)
+
+# in_features = 10
+# out_features = 5
+# weight_data = np.random.randn(out_features, in_features).astype(np.float32)
+# weight = tensor(weight_data, requires_grad=True)
+
+# bias_data = np.random.randn(out_features).astype(np.float32)
+# bias = tensor(bias_data, requires_grad=True)
+
+# np_input = np.random.randn(in_features).astype(np.float32)
+# input_tensor = tensor(np_input, requires_grad=True)
+
+# output = input_tensor @ weight.transpose() + bias
+
+# grad_output_np = np.ones(out_features, dtype=np.float32)
+# grad_output_tensor = tensor(grad_output_np)
+
+# output.backward(grad_output_tensor)
+
+# print("Gradient of weight:")
+# print(weight.grad)
+# print("Gradient of bias:")
+# print(bias.grad)
+# print("Gradient of input:")
+# print(input_tensor.grad)
 
 #  import torch
 # import torch.nn as nn

@@ -75,6 +75,60 @@ class TestFactoryMethods(unittest.TestCase):
         expected = np.eye(3)
         self.assertTrue(np.array_equal(t.numpy(), expected))
 
+class TestReshape(unittest.TestCase):
+    def test_reshape_basic(self):
+        t = tensor([1, 2, 3, 4, 5, 6])
+        reshaped_t = t.reshape(2, 3)
+        self.assertEqual(reshaped_t.shape, (2, 3))
+        self.assertTrue(np.array_equal(reshaped_t.numpy(), np.array([[1, 2, 3], [4, 5, 6]])))
+
+        t2 = tensor([[1, 2], [3, 4], [5, 6]])
+        reshaped_t2 = t2.reshape(6)
+        self.assertEqual(reshaped_t2.shape, (6,))
+        self.assertTrue(np.array_equal(reshaped_t2.numpy(), np.array([1, 2, 3, 4, 5, 6])))
+
+        t3 = tensor.rand(2, 3, 4)
+        reshaped_t3 = t3.reshape(3, 8)
+        self.assertEqual(reshaped_t3.shape, (3, 8))
+        self.assertEqual(reshaped_t3.size, t3.size)
+
+    def test_reshape_backward(self):
+        t = tensor([1.0, 2.0, 3.0, 4.0], requires_grad=True)
+        reshaped_t = t.reshape(2, 2)
+        grad_output = tensor([[1.0, 2.0], [3.0, 4.0]])
+        reshaped_t.backward(grad_output)
+        self.assertTrue(np.array_equal(t.grad.numpy(), np.array([1.0, 2.0, 3.0, 4.0])))
+
+        t2 = tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
+        reshaped_t2 = t2.reshape(4)
+        grad_output_2 = tensor([1.0, 2.0, 3.0, 4.0])
+        reshaped_t2.backward(grad_output_2)
+        self.assertTrue(np.array_equal(t2.grad.numpy(), np.array([[1.0, 2.0], [3.0, 4.0]])))
+
+        t3 = tensor.rand(2, 3, requires_grad=True)
+        reshaped_t3 = t3.reshape(3, 2)
+        grad_output_3 = tensor([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]])
+        reshaped_t3.backward(grad_output_3)
+        self.assertEqual(t3.grad.shape, (2, 3))
+        self.assertIsNotNone(t3.grad)
+
+    def test_reshape_no_grad(self):
+        t = tensor([1, 2, 3, 4])
+        reshaped_t = t.reshape(2, 2)
+        # Backward should not do anything as requires_grad is False
+        reshaped_t.backward(tensor([[1.0, 1.0], [1.0, 1.0]]))
+        self.assertIsNone(t.grad)
+
+    def test_reshape_invalid_shape(self):
+        t = tensor([1, 2, 3])
+        with self.assertRaises(ValueError):
+            t.reshape(2, 2)
+
+        t2 = tensor([[1, 2], [3, 4]])
+        with self.assertRaises(ValueError):
+            t2.reshape(5)
+
+
 class TestProperties(unittest.TestCase):
     def test_shape_property(self):
         t = tensor.rand(2, 3, 4)

@@ -1,5 +1,6 @@
 from pyml.tensor import tensor
 import torch
+from pyml.tensor import tensor
 
 
 def create_tensor_from_data(data, dtype, device, requires_grad=False):
