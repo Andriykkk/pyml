@@ -1,9 +1,11 @@
 import numpy as np
 from .device import DeviceManager
 from contextlib import contextmanager
+from pyml.core import _ops_registry
 
 class tensor:
     _grad_enabled = True
+    _ops_registry = _ops_registry
 
     def __init__(self, data=None, dtype=None, device="cpu", requires_grad=False):
         """
@@ -79,7 +81,8 @@ class tensor:
         
     # Operations
     def __neg__(self):
-        result = tensor(-self._data, dtype=self.dtype, device=self.device.type)
+        ops = self._ops_registry[self.device.type]
+        result = ops.neg(self)
 
         if result.requires_grad:
             result._ctx = (self)
@@ -94,10 +97,8 @@ class tensor:
         if self.device.type != other.device.type:
             raise RuntimeError("Tensors must be on the same device")
 
-        result_data = self._data + other._data
-        
-        result = tensor(result_data, dtype=self.dtype, device=self.device.type,
-                    requires_grad=self.requires_grad or other.requires_grad)
+        ops = self._ops_registry[self.device.type]
+        result = ops.add(self, other)
         
         if result.requires_grad:
             result._ctx = (self, other)
@@ -112,10 +113,8 @@ class tensor:
         if self.device.type != other.device.type:
             raise RuntimeError("Tensors must be on the same device")
         
-        result_data = self._data - other._data
-        
-        result = tensor(result_data, dtype=self.dtype, device=self.device.type,
-                       requires_grad=self.requires_grad or other.requires_grad)
+        ops = self._ops_registry[self.device.type]
+        result = ops.sub(self, other)
         
         if result.requires_grad:
             result._ctx = (self, other)
@@ -130,10 +129,8 @@ class tensor:
         if self.device.type != other.device.type:
             raise RuntimeError("Tensors must be on the same device")
         
-        result_data = self._data * other._data
-        
-        result = tensor(result_data, dtype=self.dtype, device=self.device.type,
-                       requires_grad=self.requires_grad or other.requires_grad)
+        ops = self._ops_registry[self.device.type]
+        result = ops.mul(self, other)
         
         if result.requires_grad:
             result._ctx = (self, other)
@@ -148,10 +145,8 @@ class tensor:
         if self.device.type != other.device.type:
             raise RuntimeError("Tensors must be on the same device")
         
-        result_data = self._data / other._data
-        
-        result = tensor(result_data, dtype=self.dtype, device=self.device.type,
-                       requires_grad=self.requires_grad or other.requires_grad)
+        ops = self._ops_registry[self.device.type]
+        result = ops.div(self, other)
         
         if result.requires_grad:
             result._ctx = (self, other)
@@ -164,10 +159,8 @@ class tensor:
         if not isinstance(other, tensor):
             raise TypeError(f"Unsupported type for matmul: {type(other)}")
         
-        result_data = np.matmul(self._data, other._data)
-        
-        result = tensor(result_data, dtype=self.dtype, device=self.device.type,
-                       requires_grad=self.requires_grad or other.requires_grad)
+        ops = self._ops_registry[self.device.type]
+        result = ops.matmul(self, other)
         
         if result.requires_grad:
             result._ctx = (self, other)
@@ -183,27 +176,20 @@ class tensor:
         return self.matmul(other)
     
     def transpose(self, *axes):
-            """Transpose the tensor dimensions with autograd support"""
-            if len(axes) == 0:
-                transposed_data = np.transpose(self._data)
-            else:
-                transposed_data = np.transpose(self._data, axes)
-
-            result = tensor(transposed_data, dtype=self.dtype, device=self.device.type,
-                    requires_grad=self.requires_grad)
-            
-            if result.requires_grad:
-                result._ctx = (self, axes if len(axes) > 0 else None)
-                result._grad_fn = _transpose_backward
-            
-            return result
+        """Transpose the tensor dimensions with autograd support"""
+        ops = self._ops_registry[self.device.type]
+        result = ops.transpose(self, *axes)
+        
+        if result.requires_grad:
+            result._ctx = (self, axes if len(axes) > 0 else None)
+            result._grad_fn = _transpose_backward
+        
+        return result
     
     def sum(self, axis=None, keepdims=False, **kwargs):
         """Sum of tensor elements with autograd support"""
-        result_data = np.sum(self._data, axis=axis, keepdims=keepdims, **kwargs)
-        
-        result = tensor(result_data, dtype=self.dtype, device=self.device.type,
-                       requires_grad=self.requires_grad)
+        ops = self._ops_registry[self.device.type]
+        result = ops.sum(self, axis=axis, keepdims=keepdims, **kwargs)
         
         if result.requires_grad:
             result._ctx = (self, axis, keepdims)
@@ -213,10 +199,8 @@ class tensor:
     
     def max(self, axis=None, keepdims=False):
         """Compute the maximum of tensor elements along given axis"""
-        result_data = np.max(self._data, axis=axis, keepdims=keepdims)
-        
-        result = tensor(result_data, dtype=self.dtype, device=self.device.type,
-                      requires_grad=self.requires_grad)
+        ops = self._ops_registry[self.device.type]
+        result = ops.max(self, axis=axis, keepdims=keepdims)
         
         if result.requires_grad:
             result._ctx = (self, axis, keepdims)
@@ -226,10 +210,8 @@ class tensor:
     
     def mean(self, axis=None, keepdims=False):
         """Mean of tensor elements with autograd support"""
-        result_data = np.mean(self._data, axis=axis, keepdims=keepdims)
-        
-        result = tensor(result_data, dtype=self.dtype, device=self.device.type,
-                       requires_grad=self.requires_grad)
+        ops = self._ops_registry[self.device.type]
+        result = ops.mean(self, axis=axis, keepdims=keepdims)
         
         if result.requires_grad:
             result._ctx = (self, axis, keepdims)

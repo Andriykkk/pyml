@@ -1,6 +1,10 @@
 from pyml.tensor import tensor
 import torch
 
+
+def create_tensor_from_data(data, dtype, device, requires_grad=False):
+    return tensor(data, dtype=dtype, device=device, requires_grad=requires_grad)
+
 def pytorch_dtype_to_pyml_dtype(pytorch_dtype):
     """
     Converts a PyTorch dtype to your custom dtype.

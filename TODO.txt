@@ -1,6 +1,6 @@
 [ ] - add activation functions and backward passes
+[ ] - add loss function Crossentropy
 [ ] - add nn module and function like .to(device), forward, accumulation of gradients and parameters
-[x] - add with structure like "with no grad"
 [ ] - check advanced indexint in backward pass for gradient accumulation
 [ ] - write tests for activation functions
 [ ] - write gpu support
