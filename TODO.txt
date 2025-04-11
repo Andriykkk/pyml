@@ -1,4 +1,4 @@
-[ ] - add activation functions and backward passes
+[x] - add activation functions and backward passes
 [ ] - add loss function Crossentropy
 [ ] - add nn module and function like .to(device), forward, accumulation of gradients and parameters
 [ ] - check advanced indexint in backward pass for gradient accumulation
