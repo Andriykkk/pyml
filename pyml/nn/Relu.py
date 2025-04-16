@@ -8,11 +8,14 @@ _ops_relu = {
     }
 }
 
-class Relu:
-    """ReLU activation function that can be saved as a variable"""
-    def __call__(self, x):
+def Relu(x=None):
+    if x is not None:
         return ReluFunction.apply(x)
-    
+    class _Relu:
+        def __call__(self, x):
+            return ReluFunction.apply(x)
+    return _Relu()
+
 class ReluFunction:
     """Function class for ReLU that handles forward/backward"""
     @staticmethod

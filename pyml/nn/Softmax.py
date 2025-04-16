@@ -8,37 +8,46 @@ _ops_softmax = {
     }
 }
 
-class Softmax:
-    """Softmax activation function that can be called directly"""
-    def __init__(self, dim=None):
-        self.dim = dim
+def Softmax(x=None, dim=None):
+    if x is not None:
+        return SoftmaxFunction.apply(x, dim)
     
-    def __call__(self, x):
-        return self.forward(x)
-    
-    def forward(self, x):
-        """Forward pass of softmax"""
-        if not isinstance(x, tensor):
-            x = tensor(x)
-            
-        if self.dim is None:
-            dim = 0 if x.ndim == 1 else 1
-        else:
-            dim = self.dim
-            
-        result = _ops_softmax[x.device.type]['forward'](x, dim)
+    class _Softmax:
+        def __init__(self, dim=None):
+            self.dim = dim
         
-        if result.requires_grad:
-            result._ctx = (x, dim)
-            result._grad_fn = _ops_softmax[x.device.type]['backward']
-            
+        def __call__(self, x):
+            return SoftmaxFunction.apply(x, self.dim)
+    
+    return _Softmax(dim=dim)
+
+class SoftmaxFunction:
+    """Function class for Softmax that handles forward/backward"""
+    @staticmethod
+    def forward(input_tensor, dim):
+        ops = _ops_softmax[input_tensor.device.type]
+        return ops['forward'](input_tensor, dim)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        ops = _ops_softmax[ctx[0].device.type]
+        ops['backward'](ctx, grad_output)
+
+    @staticmethod
+    def apply(input_tensor, dim=None):
+        if not isinstance(input_tensor, tensor):
+            input_tensor = tensor(input_tensor)
+        
+        if dim is None:
+            dim = 0 if input_tensor.ndim == 1 else 1
+        
+        result = SoftmaxFunction.forward(input_tensor, dim)
+
+        if input_tensor.requires_grad:
+            result._ctx = (input_tensor, dim)
+            result._grad_fn = SoftmaxFunction.backward
+        
         return result
-
-def softmax(x, dim=None):
-    """Functional interface for softmax"""
-    return Softmax(dim=dim)(x)
-
-
 
 def _softmax_forward_cpu(input_tensor, dim):
     shifted = input_tensor._data - np.max(input_tensor._data, axis=dim, keepdims=True)
@@ -46,14 +55,15 @@ def _softmax_forward_cpu(input_tensor, dim):
     result_data = exp / np.sum(exp, axis=dim, keepdims=True)
     
     return tensor(result_data, dtype=input_tensor.dtype,
-                device=input_tensor.device.type,
-                requires_grad=input_tensor.requires_grad)
+                  device=input_tensor.device.type,
+                  requires_grad=input_tensor.requires_grad)
 
 def _softmax_backward_cpu(ctx, grad_output):
     input_tensor, dim = ctx
     s = input_tensor.softmax(dim)._data
     grad_input = grad_output._data * s - s * np.sum(grad_output._data * s, axis=dim, keepdims=True)
     
-    input_tensor.backward(tensor(grad_input, device=input_tensor.device.type)) 
+    input_tensor.backward(tensor(grad_input, device=input_tensor.device.type))
 
-tensor.softmax = lambda self, dim=None: softmax(self, dim) 
+# Functional method attached to tensor class
+tensor.softmax = lambda self, dim=None: SoftmaxFunction.apply(self, dim)

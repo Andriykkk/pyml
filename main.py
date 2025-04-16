@@ -5,7 +5,7 @@ from pyml.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 
-class SimpleNN():
+class SimpleNN(pyml.nn.Module):
     def __init__(self):
         self.fc1 = pyml.nn.Linear(28 * 28, 128)
         self.fc2 = pyml.nn.Linear(128, 64)
@@ -33,7 +33,8 @@ for inputs, labels in testloader:
     print(labels.shape)
 
 model = SimpleNN()
-
+criterion = pyml.nn.CrossEntropyLoss()
+optimizer = pyml.optim.SGD(model.parameters(), lr=0.001)
 
 # criterion = nn.CrossEntropyLoss()  # Suitable for multi-class classification
 # optimizer = optim.Adam(model.parameters(), lr=0.001)
