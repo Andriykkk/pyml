@@ -1,17 +1,18 @@
 import numpy as np
 from pyml import tensor
-import pyml.nn
+import pyml.nn as nn
 from pyml.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
+import pyml.optim as optim 
 
-class SimpleNN(pyml.nn.Module):
+class SimpleNN(nn.Module):
     def __init__(self):
-        self.fc1 = pyml.nn.Linear(28 * 28, 128)
-        self.fc2 = pyml.nn.Linear(128, 64)
-        self.fc3 = pyml.nn.Linear(64, 10)
-        self.relu = pyml.nn.Relu()
-        self.softmax = pyml.nn.Softmax()
+        self.fc1 = nn.Linear(28 * 28, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 10)
+        self.relu = nn.Relu()
+        self.softmax = nn.Softmax()
 
     def forward(self, x):
         x = x.view(-1, 28 * 28)
@@ -28,13 +29,9 @@ testset = torchvision.datasets.FashionMNIST(root='./data', train=False, download
 trainloader = DataLoader(trainset, batch_size=64, shuffle=True)
 testloader = DataLoader(testset, batch_size=64, shuffle=False)
 
-for inputs, labels in testloader:
-    print(inputs.shape)
-    print(labels.shape)
-
 model = SimpleNN()
-criterion = pyml.nn.CrossEntropyLoss()
-optimizer = pyml.optim.SGD(model.parameters(), lr=0.001)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.001)
 
 # criterion = nn.CrossEntropyLoss()  # Suitable for multi-class classification
 # optimizer = optim.Adam(model.parameters(), lr=0.001)

@@ -1,8 +1,9 @@
 import numpy as np
 from pyml.tensor import tensor
 from pyml.utils import kaiming_uniform
+from pyml.nn.module import Module
 
-class Linear:
+class Linear(Module):
     def __init__(self, in_features, out_features, bias=True, device='cpu'):
         """
         A linear layer (fully connected layer) with optional bias.
@@ -13,9 +14,10 @@ class Linear:
             bias: If False, the layer will not learn an additive bias
             device: Device to store parameters ('cpu' or 'cuda')
         """
+        super().__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.bias = bias
+        self._use_bias = bias
         self.device = device
         
         # Initialize weights
@@ -25,17 +27,25 @@ class Linear:
             device=device,
             requires_grad=True
         )
+
+        super().__setattr__('weight', self.weight)
         
         # Initialize bias if requested
         if bias:
-            self.bias_param = tensor(
+            self._bias_param = tensor(
                 np.reshape(kaiming_uniform(out_features, 1), (-1,)),
                 dtype='float32',
                 device=device,
                 requires_grad=True
             )
+            super().__setattr__('_bias_param', self._bias_param)
         else:
-            self.bias_param = None
+            self._bias_param = None
+
+    @property
+    def bias(self):
+        """Mimic PyTorch behavior: return the bias tensor if it exists, else None."""
+        return self._bias_param
     
     def __call__(self, x):
         return self.forward(x)
@@ -51,7 +61,7 @@ class Linear:
         # Use pyml.tensor's matmul and transpose
         output = x @ self.weight.transpose()
         if self.bias:
-            output = output + self.bias_param
+            output = output + self.bias
 
         if squeeze_output:
             output = output.reshape(-1)
@@ -64,7 +74,7 @@ class Linear:
     def parameters(self):
         """Return all trainable parameters"""
         if self.bias:
-            return [self.weight, self.bias_param]
+            return [self.weight, self.bias]
         return [self.weight]
     
     def zero_grad(self):

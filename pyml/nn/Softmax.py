@@ -1,5 +1,6 @@
 import numpy as np
 from pyml.tensor import tensor
+from pyml.nn.module import Module
 
 _ops_softmax = {
     'cpu': {
@@ -8,18 +9,14 @@ _ops_softmax = {
     }
 }
 
-def Softmax(x=None, dim=None):
-    if x is not None:
-        return SoftmaxFunction.apply(x, dim)
-    
-    class _Softmax:
-        def __init__(self, dim=None):
-            self.dim = dim
-        
-        def __call__(self, x):
-            return SoftmaxFunction.apply(x, self.dim)
-    
-    return _Softmax(dim=dim)
+class Softmax(Module):
+    """Applies the rectified linear unit function element-wise."""
+    def __init__(self, dim=None):
+        super().__init__()
+        self.dim = dim
+
+    def forward(self, x):
+        return SoftmaxFunction.apply(x)
 
 class SoftmaxFunction:
     """Function class for Softmax that handles forward/backward"""

@@ -22,7 +22,7 @@ class TestLinearLayerCPU(unittest.TestCase):
         with torch.no_grad():
             torch_layer.weight[:] = torch.tensor(pyml_layer.weight.numpy())
             if pyml_layer.bias and torch_layer.bias is not None:
-                torch_layer.bias[:] = torch.tensor(pyml_layer.bias_param.numpy())
+                torch_layer.bias[:] = torch.tensor(pyml_layer.bias.numpy())
 
         pyml_output = pyml_layer(pyml_input)
         torch_output = torch_layer(torch_input)
@@ -47,7 +47,7 @@ class TestLinearLayerCPU(unittest.TestCase):
 
         if pyml_layer.bias and torch_layer.bias is not None:
             self.assertTrue(
-                np.allclose(pyml_layer.bias_param.grad.numpy(), torch_layer.bias.grad.numpy(), rtol=rtol, atol=atol),
+                np.allclose(pyml_layer.bias.grad.numpy(), torch_layer.bias.grad.numpy(), rtol=rtol, atol=atol),
                 "Bias gradient mismatch"
             )
 
@@ -64,7 +64,7 @@ class TestLinearLayerCPU(unittest.TestCase):
         # Copy weights and biases
         with torch.no_grad():
             torch_linear.weight[:] = torch.tensor(pyml_linear.weight.numpy())
-            torch_linear.bias[:] = torch.tensor(pyml_linear.bias_param.numpy())
+            torch_linear.bias[:] = torch.tensor(pyml_linear.bias.numpy())
 
         # Create test input (single sample)
         np_input = np.random.randn(self.in_features).astype(np.float32)
@@ -89,7 +89,7 @@ class TestLinearLayerCPU(unittest.TestCase):
         # Debugging prints
         print("PyML weight grad:", pyml_linear.weight.grad)
         print("Torch weight grad:", torch_linear.weight.grad)
-        print("PyML bias grad:", pyml_linear.bias_param.grad if pyml_linear.bias else None)
+        print("PyML bias grad:", pyml_linear.bias.grad if pyml_linear.bias else None)
         print("Torch bias grad:", torch_linear.bias.grad if torch_linear.bias is not None else None)
 
         # Verify gradients
@@ -100,9 +100,9 @@ class TestLinearLayerCPU(unittest.TestCase):
         )
 
         if pyml_linear.bias:
-            self.assertIsNotNone(pyml_linear.bias_param.grad, "Bias gradient is None")
+            self.assertIsNotNone(pyml_linear.bias.grad, "Bias gradient is None")
             self.assertTrue(
-                np.allclose(pyml_linear.bias_param.grad.numpy(), torch_linear.bias.grad.numpy()),
+                np.allclose(pyml_linear.bias.grad.numpy(), torch_linear.bias.grad.numpy()),
                 "Bias gradient mismatch"
             )
 
@@ -118,7 +118,7 @@ class TestLinearLayerCPU(unittest.TestCase):
         
         with torch.no_grad():
             torch_linear.weight[:] = torch.tensor(pyml_linear.weight.numpy())
-            torch_linear.bias[:] = torch.tensor(pyml_linear.bias_param.numpy())
+            torch_linear.bias[:] = torch.tensor(pyml_linear.bias.numpy())
         
         self.compare_with_torch(
             pyml_linear,
@@ -153,7 +153,7 @@ class TestLinearLayerCPU(unittest.TestCase):
         self.assertAlmostEqual(std_weight, expected_std_weight, delta=0.1)
 
         if linear.bias:
-            bias = linear.bias_param.numpy()
+            bias = linear.bias.numpy()
             mean_bias = np.mean(bias)
             std_bias = np.std(bias)
             expected_std_bias = np.sqrt(2.0 / 50)
@@ -176,8 +176,8 @@ class TestLinearLayerCPU(unittest.TestCase):
         y.backward(tensor(np.ones_like(y.numpy())))
         
         self.assertIsNotNone(linear.weight.grad)
-        self.assertIsNotNone(linear.bias_param.grad)
+        self.assertIsNotNone(linear.bias.grad)
         
         linear.zero_grad()
         self.assertIsNone(linear.weight.grad)
-        self.assertIsNone(linear.bias_param.grad)
+        self.assertIsNone(linear.bias.grad)

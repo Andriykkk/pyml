@@ -1,5 +1,6 @@
 import numpy as np
 from pyml.tensor import tensor
+from pyml.nn.module import Module
 
 _ops_relu = {
     'cpu':{
@@ -7,14 +8,14 @@ _ops_relu = {
         'backward': lambda ctx, grad_output: _relu_backward_cpu(ctx, grad_output)
     }
 }
+ 
+class Relu(Module):
+    """Applies the rectified linear unit function element-wise."""
+    def __init__(self):
+        super().__init__()
 
-def Relu(x=None):
-    if x is not None:
+    def forward(self, x):
         return ReluFunction.apply(x)
-    class _Relu:
-        def __call__(self, x):
-            return ReluFunction.apply(x)
-    return _Relu()
 
 class ReluFunction:
     """Function class for ReLU that handles forward/backward"""
@@ -48,6 +49,5 @@ def _relu_backward_cpu(ctx, grad_output):
     
     ctx.backward(tensor(grad_input, device=ctx.device.type))
 
-def relu(self):
-    """Functional interface"""
-    return ReluFunction.apply(self) 
+def relu(x):
+    return ReluFunction.apply(x)
